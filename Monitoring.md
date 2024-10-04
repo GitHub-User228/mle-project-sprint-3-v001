@@ -1,7 +1,7 @@
 # Monitoring
 
 This file describes the monitoring system used to monitor the ML microservice.
-A dashboard consists of 9 different panels:
+A [dashboard](services/grafana/dashboard.json) consists of 9 different panels:
 - `CPU Usage`: Shows the CPU usage of the microservice over time window.
 - `Memory Usage`: Shows the memory usage of the microservice over time window.
 - `Error Rate`: Shows the error rate of the microservice over time window for different types of errors.
@@ -11,6 +11,8 @@ A dashboard consists of 9 different panels:
 - `Prediction Request Duration Quantiles (total)`: Shows the quantiles of the prediction request processing time over all time.
 - `Prediction Request Duration Quantiles (over time window)`: Shows the quantiles of the prediction request processing time over the time window
 - `Prediction Request Rate`: Shows the rate of the prediction requests over time window.
+
+In order to use this dashboard, you need to import it via the Grafana UI.
 
 ## Several layer metrics have been selected for monitoring:
 
