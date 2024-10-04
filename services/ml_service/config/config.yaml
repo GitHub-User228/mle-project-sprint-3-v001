@@ -1,0 +1,16 @@
+prediction_endpoint: '/predict'
+handler:
+    fe_pipeline_filename: 'fe_pipeline.pkl'
+    model_filename: 'final_model.pkl'
+constraints:
+    request_rate_limit:
+        global:
+            # Global rate limit: number of requests allowed
+            times: 30
+            # Global rate limit: time window in seconds
+            seconds: 60
+        per_ip:
+            # Per IP rate limit: number of requests allowed
+            times: 2
+            # Per IP rate limit: time window in seconds
+            seconds: 60
