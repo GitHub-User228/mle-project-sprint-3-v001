@@ -19,9 +19,6 @@ services:
       - type: bind
         source: ./ml_service
         target: /fastapi_app/ml_service
-      - type: bind
-        source: ./models
-        target: /fastapi_app/models
     hostname: fastapi_app
     depends_on:
       - redis

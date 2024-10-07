@@ -2,6 +2,9 @@ from pathlib import Path
 from pydantic import BaseSettings, validator
 
 
+PROJECT_DIR = Path(__file__).resolve().parent.parent
+
+
 class EnviromentVariables(BaseSettings):
     """
     Defines an `EnviromentVariables` class that loads and validates
@@ -46,6 +49,27 @@ class EnviromentVariables(BaseSettings):
         if isinstance(v, Path):
             if not v.exists():
                 v.mkdir(parents=True, exist_ok=True)
+        return v
+
+    @validator("*", pre=True)
+    def adjust_paths(cls, v: str, field: str) -> str:
+        """
+        Adjusts the directory paths based on the environment (Docker or Conda).
+
+        Args:
+            v (str):
+                The environment variable value to be adjusted.
+            field (str):
+                The name of the environment variable.
+
+        Returns:
+            str:
+                The adjusted environment variable value.
+        """
+
+        # Adjust path if the field is a directory path
+        if field.name in ["log_dir", "config_dir", "param_dir", "model_dir"]:
+            return PROJECT_DIR / v
         return v
 
     @classmethod

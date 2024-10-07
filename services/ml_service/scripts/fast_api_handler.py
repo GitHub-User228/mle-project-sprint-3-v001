@@ -3,7 +3,9 @@ import pandas as pd
 from pathlib import Path
 from typing import Dict, Any
 from fastapi import HTTPException
+from catboost import CatBoostError
 from pydantic import ValidationError
+from sklearn.exceptions import NotFittedError
 
 from scripts import logger
 from scripts.env import env_vars
@@ -29,6 +31,19 @@ class FastApiHandler:
     Raises:
         TypeError:
             If the input class arguments are not of the correct type.
+        FileNotFoundError:
+            If the model or feature engineering pipeline file is not
+            found.
+        ImportError:
+            If a function or a class used in the feature engineering
+            pipeline
+            cannot be imported.
+        AttributeError:
+            If there is an attribute error occured in the feature
+            engineering pipeline.
+        RuntimeError:
+            If there is an unexpected error loading the model or
+            feature engineering pipeline file.
         HTTPException:
             If there is an error validating the input parameters or
             predicting the price.
@@ -39,14 +54,49 @@ class FastApiHandler:
         self.model_filename = model_filename
         self.fe_pipeline_filename = fe_pipeline_filename
         self._validate_class_input()
-        self.model = read_pkl(Path(env_vars.model_dir, self.model_filename))
-        self.fe_pipeline = read_pkl(
-            Path(env_vars.model_dir, self.fe_pipeline_filename)
-        )
+        self.load_models()
         self.init_fe_pipeline()
         logger.info(
             f"[{self.__class__.__name__}] Handler has been initialised."
         )
+
+    def load_models(self):
+        try:
+            self.model = read_pkl(
+                Path(env_vars.model_dir, self.model_filename)
+            )
+        except FileNotFoundError:
+            msg = f"Model file '{self.model_filename}' not found"
+            logger.error(f"[{self.__class__.__name__}]: {msg}", exc_info=True)
+            raise FileNotFoundError(msg)
+        except Exception as e:
+            msg = f"Error loading model file '{self.model_filename}'"
+            logger.error(f"[{self.__class__.__name__}]: {msg}", exc_info=True)
+            raise RuntimeError(msg) from e
+
+        try:
+            self.fe_pipeline = read_pkl(
+                Path(env_vars.model_dir, self.fe_pipeline_filename)
+            )
+        except FileNotFoundError:
+            msg = f"FE pipeline file '{self.fe_pipeline_filename}' not found"
+            logger.error(f"[{self.__class__.__name__}]: {msg}", exc_info=True)
+            raise FileNotFoundError(msg)
+        except ImportError as e:
+            msg = "Error loading FE pipeline: missing function or class"
+            logger.error(f"[{self.__class__.__name__}]: {msg}", exc_info=True)
+            raise ImportError(msg) from e
+        except AttributeError as e:
+            msg = "Error loading FE pipeline: attribute error"
+            logger.error(f"[{self.__class__.__name__}]: {msg}", exc_info=True)
+            raise AttributeError(msg) from e
+        except Exception as e:
+            msg = (
+                f"Unexpected error loading FE pipeline file "
+                f"'{self.fe_pipeline_filename}'"
+            )
+            logger.error(f"[{self.__class__.__name__}]: {msg}", exc_info=True)
+            raise RuntimeError(msg) from e
 
     def _validate_class_input(self) -> None:
         """
@@ -97,22 +147,48 @@ class FastApiHandler:
             transformed_features = await asyncio.to_thread(
                 self.fe_pipeline.transform, pd.DataFrame([model_params])
             )
+        except NotFittedError as e:
+            msg = "Feature engineering pipeline is not fitted"
+            logger.error(f"[{self.__class__.__name__}]: {msg}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail={"error_message": msg, "error_info": str(e)},
+            )
+        except ValueError as e:
+            msg = "Invalid input data for feature engineering pipeline"
+            logger.error(f"[{self.__class__.__name__}]: {msg}", exc_info=True)
+            raise HTTPException(
+                status_code=400,
+                detail={"error_message": msg, "error_info": str(e)},
+            )
+        except Exception as e:
+            msg = "Error during feature transformation"
+            logger.error(f"[{self.__class__.__name__}]: {msg}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail={"error_message": msg, "error_info": str(e)},
+            )
+
+        try:
             # Predicting price
             prediction = await asyncio.to_thread(
                 self.model.predict, transformed_features
             )
-            # reverse transform since model outputs log10(1 + price)
             prediction = 10 ** prediction.item() - 1
             return prediction
-        except Exception as e:
-            msg = f"Failed to predict flat price for input {model_params}"
-            logger.error(
-                f"[{self.__class__.__name__}]: {msg} for input {model_params}",
-                exc_info=True,
-            )
+        except CatBoostError as e:
+            msg = "Error during model prediction with CatBoost"
+            logger.error(f"[{self.__class__.__name__}]: {msg}", exc_info=True)
             raise HTTPException(
                 status_code=500,
-                detail={"error_message": msg},
+                detail={"error_message": msg, "error_info": str(e)},
+            )
+        except Exception as e:
+            msg = "Unexpected error during model prediction with CatBoost"
+            logger.error(f"[{self.__class__.__name__}]: {msg}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail={"error_message": msg, "error_info": str(e)},
             )
 
     def validate_params(self, params: Dict[str, Any]) -> None:

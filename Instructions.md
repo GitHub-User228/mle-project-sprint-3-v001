@@ -25,6 +25,7 @@ cd services/ml_service
 
 # installing the dependencies
 pip install -r requirements.txt
+pip install -e .
 
 # starting the microservice via uvicorn
 uvicorn app.flat_price_app_simple:app --reload --host 0.0.0.0 --port 8123
@@ -82,7 +83,7 @@ cd services
 docker build -t ml_service_image -f Dockerfile_single_service .
 
 # running the container from the created image
-docker run --name ml_service_container --publish 4602:8081 --volume=./models:/fastapi_app/models --env-file .env ml_service_image
+docker run --name ml_service_container --publish 4602:8081 --volume=./ml_service/models:/fastapi_app/ml_service/models --env-file .env ml_service_image
 ```
 
 ### Example curl query to the microservice
@@ -171,14 +172,11 @@ Script [test.py](services/ml_service/tests/test.py) simulates a load on the micr
 # If you are not yet in the conda environment created eariler, activate it
 conda activate venv1
 
-# Assuming you are in the root directory of the repository, cd to the directory with the microservice
-cd services/ml_service
-
 # Run the testing script to send 50 different valid requests with a 0.01 second delay from different IPs with 0 invalid requests
-python3 tests/test.py --r 50 --d 0.01 --m True --i 0.0
+python3 -m tests.test --r 50 --d 0.01 --m True --i 0.0
 
 # Run the testing script to send 10 different valid requests with a 0.01 second delay from the same IP with 30% chance of sending an invalid request
-python3 tests/test.py --r 10 --d 0.01 --m False --i 0.3
+python3 -m tests.test --r 10 --d 0.01 --m False --i 0.3
 ```
 
 Addresses of the services:

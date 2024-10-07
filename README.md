@@ -29,9 +29,6 @@ In case of `docker compose` deployment, the following services are also availabl
 
 **[services](services)**: This directory contains files related to the services:
 
-- **[models](services/models)**: This directory contains model files:
-    - [fe_pipeline](services/models/fe_pipeline.pkl): Feature engineering pipeline used to generate the features
-    - [final_model.pkl](services/models/final_model.pkl): Trained ML model
 
 - **[prometheus](services/prometheus)**: This directory contains files related to monitoring the service by using Prometheus
     - [prometheus.yml](services/prometheus/prometheus.yml): Configuration file for Prometheus
@@ -42,6 +39,10 @@ In case of `docker compose` deployment, the following services are also availabl
     - [fix_datasource_uid.py](services/grafana/fix_datasource_uid.py): Script for fixing the datasource UID in the Grafana dashboard
 
 - **[ml_service](services/ml_service)**: This directory contains files related to the ML microservice:
+
+    - **[models](services/ml_service/models)**: This directory contains model files:
+        - [fe_pipeline](services/ml_service/models/fe_pipeline.pkl): Feature engineering pipeline used to generate the features
+        - [final_model.pkl](services/ml_service/models/final_model.pkl): Trained ML model
     - **[config](services/ml_service/config)**: Configuration files for the ML microservice
         - [config.yaml](services/ml_service/config/config.yaml): Configuration for the project
         - [logger_config.yaml](services/ml_service/config/logger_config.yaml): Configuration for the logger
@@ -59,6 +60,7 @@ In case of `docker compose` deployment, the following services are also availabl
         - [test.py](services/ml_service/tests/test.py): Tests for the ML microservice in the `docker compose` configuration by sending requests to it
     - [requirements.txt](services/ml_service/requirements.txt): List of required Python packages
     - [Dockerfile](services/ml_service/Dockerfile): Dockerfile used to build the docker image for the ML microservice in the `docker compose` configuration
+    - [setup.py](services/ml_service/setup.py): Setup file for the ML microservice, so that all scripts can be easily accessable from any directory
 - [.env](services/.env): This file contains environment variables used by the services
 - [docker-compose.yaml](services/docker-compose.yaml): Docker compose file used to run all the services
 - [Dockerfile_single_service](services/Dockerfile_single_service): Dockerfile used to build the docker image for a microservice in the `docker container` configuration

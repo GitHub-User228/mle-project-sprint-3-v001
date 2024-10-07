@@ -2,6 +2,7 @@ import math
 
 import yaml
 import json
+import random
 import joblib
 from pathlib import Path
 from typing import Dict, Any
@@ -190,3 +191,17 @@ def boolean(arg: Any):
         return False
     else:
         raise ValueError("invalid value for boolean argument")
+
+
+def generate_random_ip() -> str:
+    """
+    Generates a random IP address as a string.
+
+    Returns:
+        str:
+            A random IP address in the format "x.x.x.x".
+    """
+    return (
+        f"{random.randint(1, 255)}.{random.randint(0, 255)}."
+        f"{random.randint(0, 255)}.{random.randint(0, 255)}"
+    )

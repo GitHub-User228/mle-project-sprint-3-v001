@@ -4,8 +4,9 @@ LABEL author=${LABEL}
 
 WORKDIR /fastapi_app/ml_service
 
-COPY requirements.txt requirements.txt
+COPY . .
 
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt && \
+    pip install -e .
 
 ENTRYPOINT ["/bin/bash", "entrypoints/entrypoint_compose.sh"]

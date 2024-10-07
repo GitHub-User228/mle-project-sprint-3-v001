@@ -12,7 +12,7 @@ from scripts.settings import config
 from scripts.utils import read_json
 from scripts.fast_api_handler import FastApiHandler
 from scripts.limiters import global_limiter, ip_limiter
-from scripts.prometheus_metrics import (
+from scripts.metrics import (
     INVALID_REQUEST_COUNT,
     FAILED_PREDICTIONS_COUNT,
     UNEXPECTED_ERROR_COUNT,
